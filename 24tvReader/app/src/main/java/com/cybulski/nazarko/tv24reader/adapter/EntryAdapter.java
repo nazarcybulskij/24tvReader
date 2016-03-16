@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.cybulski.nazarko.tv24reader.R;
 import com.cybulski.nazarko.tv24reader.activity.EntryListActivity;
 import com.cybulski.nazarko.tv24reader.model.dbmodel.Entry;
@@ -38,6 +39,12 @@ public class EntryAdapter extends RealmBaseAdapter<Entry> {
     } else {
       holder = (ViewHolder) convertView.getTag();
     }
+    Entry  item = getItem(position);
+    holder.titleTextView.setText(item.getTitle());
+    holder.dateTextView.setText(item.getDate());
+    Glide.with(context).load(item.getUrl()).into(holder.mainImgView);
+
+
     return  convertView;
   }
 
