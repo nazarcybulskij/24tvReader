@@ -41,7 +41,6 @@ public class EntriesListLoader  extends AsyncTaskLoader<List<Entry>> {
   @Override
   public List<Entry> loadInBackground() {
     final ArrayList<Entry> list = new ArrayList<>();
-
     try {
        list.addAll(new XML24TVParser().parse(loadNewsXml(feed.getUrl())));
 
@@ -54,10 +53,7 @@ public class EntriesListLoader  extends AsyncTaskLoader<List<Entry>> {
     com.cybulski.nazarko.tv24reader.model.dbmodel.Feed  feed = realm.where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
                                                                     .equalTo("url", this.feed.getUrl())
                                                                     .findFirst();
-
-
     Log.d(LOG_TAG, feed.getUrl() + " entries" + feed.getEntries().size());
-
     realm.beginTransaction();
     if (feed.getEntries()==null){
       feed.setEntries(new RealmList<com.cybulski.nazarko.tv24reader.model.dbmodel.Entry>());
@@ -73,21 +69,10 @@ public class EntriesListLoader  extends AsyncTaskLoader<List<Entry>> {
       }catch (RealmPrimaryKeyConstraintException exception){
 
       }
-
-
     }
-
-
-
-
     realm.copyToRealmOrUpdate(feed);
     realm.commitTransaction();
-
-
-
     realm.close();
-
-
     Log.d(LOG_TAG, "loadInBackground() loaded " + list.size() + " entries");
     return list;
   }

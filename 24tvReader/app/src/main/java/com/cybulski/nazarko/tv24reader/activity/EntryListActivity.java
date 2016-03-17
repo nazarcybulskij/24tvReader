@@ -48,19 +48,11 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
     setContentView(R.layout.activity_entry_list);
     initDB();
     getLoaderManager().initLoader(ENTRY_LIST_LOADER_ID, null, this).forceLoad();
-
     materialRefreshLayout.setMaterialRefreshListener(new MaterialRefreshListener() {
       @Override
       public void onRefresh(final MaterialRefreshLayout materialRefreshLayout) {
-        materialRefreshLayout.postDelayed(new Runnable() {
-          @Override
-          public void run() {
-            materialRefreshLayout.finishRefresh();
-
-          }
-        }, 3000);
+        getLoaderManager().initLoader(ENTRY_LIST_LOADER_ID, null, EntryListActivity.this).forceLoad();
         materialRefreshLayout.finishRefreshLoadMore();
-
       }
 
       @Override
@@ -70,31 +62,24 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
 
     });
 
-    Realm realm = Realm .getInstance(getApp());
-
+    Realm realm = Realm .getDefaultInstance();
     com.cybulski.nazarko.tv24reader.model.dbmodel.Feed feed=realm.where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
         .findFirst();
-
-    Log.d(LOG_TAG, "onCreateLoader() " + feed.getUrl());
-
     RealmResults<com.cybulski.nazarko.tv24reader.model.dbmodel.Feed> enties = realm
         .where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
         .equalTo("url", feed.getUrl())
         .findAll();
-
     adapter = new EntryAdapter(this, enties, true);
     listView.setAdapter(adapter);
     realm.close();
-
   }
 
   private  void  initDB(){
-    Realm realm = Realm.getInstance(getApp());
+    Realm realm = Realm.getDefaultInstance();
     com.cybulski.nazarko.tv24reader.model.dbmodel.Feed feed = realm
         .where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
         .equalTo("url","http://24tv.ua/rss/all.xml")
         .findFirst();
-
     realm.beginTransaction();
     if (feed==null){
       feed = new com.cybulski.nazarko.tv24reader.model.dbmodel.Feed();
@@ -110,7 +95,7 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
   public Loader onCreateLoader(int id, Bundle args) {
     Log.d(LOG_TAG, "onCreateLoader() " + id);
     if (id == ENTRY_LIST_LOADER_ID) {
-      return new EntriesListLoader(getApp(),new Feed(Realm.getInstance(getApp()).where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class).findFirst()));
+      return new EntriesListLoader(getApp(),new Feed(Realm.getDefaultInstance().where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class).findFirst()));
     }
 //    if (id == ENTRY_DB_LIST_LOADER_ID) {
 //      return new EntriesListfromDBLoader(getApp(),Realm.getDefaultInstance().where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class).findFirst());
@@ -122,10 +107,8 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
   public void onLoadFinished(Loader<List<Objects>> loader, List<Objects> data) {
     int id = loader.getId();
     if (id == ENTRY_LIST_LOADER_ID) {
-
+      materialRefreshLayout.finishRefresh();
     }
-
-
   }
 
 

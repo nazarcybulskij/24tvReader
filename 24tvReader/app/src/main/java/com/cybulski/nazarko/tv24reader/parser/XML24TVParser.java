@@ -18,37 +18,13 @@ import java.util.ArrayList;
  */
 public class XML24TVParser {
 
-  private static final String AND_SHARP = "&#";
-  private static final String HTML_TEXT = "text/html";
-  private static final String HTML_TAG_REGEX = "<(.|\n)*?>";
-
-  private static final String TAG_RSS = "rss";
-  private static final String TAG_RDF = "rdf";
-  private static final String TAG_FEED = "feed";
-  private static final String TAG_ENTRY = "entry";
-  private static final String TAG_UPDATED = "updated";
-
-
-  private static final String TAG_DESCRIPTION = "description";
-  private static final String TAG_MEDIA_DESCRIPTION = "media:description";
-  private static final String TAG_CONTENT = "content";
-  private static final String TAG_MEDIA_CONTENT = "media:content";
-  private static final String TAG_ENCODED_CONTENT = "encoded";
-  private static final String TAG_SUMMARY = "summary";
-
-  private static final String TAG_PUBLISHED = "published";
-  private static final String TAG_DATE = "date";
-  private static final String TAG_LAST_BUILD_DATE = "lastBuildDate";
-  private static final String TAG_ENCLOSURE = "enclosure";
-  private static final String TAG_GUID = "guid";
-  private static final String TAG_AUTHOR = "author";
-  private static final String TAG_CREATOR = "creator";
-  private static final String TAG_NAME = "name";
-
   private static final String TAG_ITEM = "item";
   private static final String TAG_TITLE = "title";
   private static final String TAG_PUBDATE = "pubDate";;
   private static final String TAG_LINK = "link";
+  private static final String TAG_DESCRIPTION = "description";
+  private static final String ATTR_SRC = "src";
+  private static final String TAG_IMG = "img";
 
   public ArrayList<Entry>  parse(String sourse){
     ArrayList<Entry> list = new ArrayList<>();
@@ -72,6 +48,11 @@ public class XML24TVParser {
     }
     if (element.select(TAG_LINK).first()!=null){
       entry.setLink(element.select(TAG_LINK).text());
+    }
+    if (element.select(TAG_DESCRIPTION).first()!=null){
+      Element element1 = element.select(TAG_DESCRIPTION).first();
+      Document doc = Jsoup.parse(element1.text(), "", Parser.htmlParser());
+      entry.setUrl(doc.select(TAG_IMG).attr(ATTR_SRC));
     }
     return  entry;
   }
