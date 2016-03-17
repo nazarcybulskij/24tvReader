@@ -2,8 +2,6 @@ package com.cybulski.nazarko.tv24reader.activity;
 
 import android.app.LoaderManager;
 import android.content.Loader;
-import android.graphics.Color;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ListView;
@@ -14,8 +12,6 @@ import com.cjj.MaterialRefreshListener;
 import com.cybulski.nazarko.tv24reader.R;
 import com.cybulski.nazarko.tv24reader.adapter.EntryAdapter;
 import com.cybulski.nazarko.tv24reader.loader.EntriesListLoader;
-import com.cybulski.nazarko.tv24reader.loader.EntriesListfromDBLoader;
-import com.cybulski.nazarko.tv24reader.model.networkmodel.Entry;
 import com.cybulski.nazarko.tv24reader.model.networkmodel.Feed;
 
 import java.util.List;
@@ -52,7 +48,6 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
     setContentView(R.layout.activity_entry_list);
     initDB();
     getLoaderManager().initLoader(ENTRY_LIST_LOADER_ID, null, this).forceLoad();
-    getLoaderManager().initLoader(ENTRY_DB_LIST_LOADER_ID, null, this).forceLoad();
 
     materialRefreshLayout.setMaterialRefreshListener(new MaterialRefreshListener() {
       @Override
@@ -75,14 +70,37 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
 
     });
 
+    Realm realm = Realm .getInstance(getApp());
+
+    com.cybulski.nazarko.tv24reader.model.dbmodel.Feed feed=realm.where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
+        .findFirst();
+
+    Log.d(LOG_TAG, "onCreateLoader() " + feed.getUrl());
+
+    RealmResults<com.cybulski.nazarko.tv24reader.model.dbmodel.Feed> enties = realm
+        .where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
+        .equalTo("url", feed.getUrl())
+        .findAll();
+
+    adapter = new EntryAdapter(this, enties, true);
+    listView.setAdapter(adapter);
+    realm.close();
+
   }
 
   private  void  initDB(){
-    Realm realm = Realm.getDefaultInstance();
-    com.cybulski.nazarko.tv24reader.model.dbmodel.Feed feed = new com.cybulski.nazarko.tv24reader.model.dbmodel.Feed();
-    feed.setUrl("http://24tv.ua/rss/all.xml");
+    Realm realm = Realm.getInstance(getApp());
+    com.cybulski.nazarko.tv24reader.model.dbmodel.Feed feed = realm
+        .where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
+        .equalTo("url","http://24tv.ua/rss/all.xml")
+        .findFirst();
+
     realm.beginTransaction();
-    realm.copyToRealmOrUpdate(feed);
+    if (feed==null){
+      feed = new com.cybulski.nazarko.tv24reader.model.dbmodel.Feed();
+      feed.setUrl("http://24tv.ua/rss/all.xml");
+      realm.copyToRealmOrUpdate(feed);
+    }
     realm.commitTransaction();
     realm.close();
   }
@@ -92,11 +110,11 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
   public Loader onCreateLoader(int id, Bundle args) {
     Log.d(LOG_TAG, "onCreateLoader() " + id);
     if (id == ENTRY_LIST_LOADER_ID) {
-      return new EntriesListLoader(getApp(),new Feed(Realm.getDefaultInstance().where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class).findFirst()));
+      return new EntriesListLoader(getApp(),new Feed(Realm.getInstance(getApp()).where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class).findFirst()));
     }
-    if (id == ENTRY_DB_LIST_LOADER_ID) {
-      return new EntriesListfromDBLoader(getApp(),Realm.getDefaultInstance().where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class).findFirst());
-    }
+//    if (id == ENTRY_DB_LIST_LOADER_ID) {
+//      return new EntriesListfromDBLoader(getApp(),Realm.getDefaultInstance().where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class).findFirst());
+//    }
     return null;
   }
 
@@ -106,9 +124,7 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
     if (id == ENTRY_LIST_LOADER_ID) {
 
     }
-    if (id == ENTRY_DB_LIST_LOADER_ID) {
 
-    }
 
   }
 

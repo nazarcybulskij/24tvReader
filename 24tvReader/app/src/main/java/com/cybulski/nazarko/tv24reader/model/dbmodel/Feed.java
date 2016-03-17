@@ -12,7 +12,7 @@ import io.realm.annotations.PrimaryKey;
 public class Feed extends RealmObject {
   @PrimaryKey
   private String url;
-  RealmList<Entry> entries;
+  private RealmList<Entry> entries;
 
   public String getUrl() {
     return url;
@@ -20,5 +20,13 @@ public class Feed extends RealmObject {
 
   public void setUrl(String url) {
     this.url = url;
+  }
+
+  public RealmList<Entry> getEntries() {
+    return entries;
+  }
+
+  public void setEntries(RealmList<Entry> entries) {
+    this.entries = entries;
   }
 }

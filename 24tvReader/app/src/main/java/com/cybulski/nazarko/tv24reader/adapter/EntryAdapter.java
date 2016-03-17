@@ -11,6 +11,7 @@ import com.bumptech.glide.Glide;
 import com.cybulski.nazarko.tv24reader.R;
 import com.cybulski.nazarko.tv24reader.activity.EntryListActivity;
 import com.cybulski.nazarko.tv24reader.model.dbmodel.Entry;
+import com.cybulski.nazarko.tv24reader.model.dbmodel.Feed;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -20,12 +21,27 @@ import io.realm.RealmResults;
 /**
  * Created by nazarko on 3/16/16.
  */
-public class EntryAdapter extends RealmBaseAdapter<Entry> {
+public class EntryAdapter extends RealmBaseAdapter<Feed> {
   private LayoutInflater inflater;
 
-  public EntryAdapter(Context context, RealmResults<Entry> realmResults, boolean automaticUpdate) {
+  public EntryAdapter(Context context, RealmResults<Feed> realmResults, boolean automaticUpdate) {
     super(context, realmResults, automaticUpdate);
     inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+  }
+
+  @Override
+  public int getCount() {
+    return getItem(0).getEntries().size();
+  }
+
+  @Override
+  public Feed getItem(int i) {
+    return super.getItem(0);
+  }
+
+  @Override
+  public long getItemId(int i) {
+    return super.getItemId(i);
   }
 
 
@@ -33,13 +49,14 @@ public class EntryAdapter extends RealmBaseAdapter<Entry> {
   public View getView(int position, View convertView, ViewGroup parent) {
     ViewHolder holder;
     if (convertView == null) {
-      convertView = inflater.inflate(R.layout.item_entry_list, null);
+      convertView = inflater.inflate(R.layout.item_entry_list, parent, false);
       holder = new ViewHolder(convertView);
       convertView.setTag(holder);
     } else {
       holder = (ViewHolder) convertView.getTag();
     }
-    Entry  item = getItem(position);
+    Feed feed = getItem(0);
+    Entry  item = feed.getEntries().get(position);
     holder.titleTextView.setText(item.getTitle());
     holder.dateTextView.setText(item.getDate());
     Glide.with(context).load(item.getUrl()).into(holder.mainImgView);
@@ -57,7 +74,7 @@ public class EntryAdapter extends RealmBaseAdapter<Entry> {
     public ImageView mainImgView;
 
     public ViewHolder(View view) {
-      ButterKnife.bind(view);
+      ButterKnife.bind(this,view);
     }
   }
 
