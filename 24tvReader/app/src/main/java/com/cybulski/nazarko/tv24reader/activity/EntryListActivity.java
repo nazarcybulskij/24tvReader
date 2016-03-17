@@ -1,9 +1,12 @@
 package com.cybulski.nazarko.tv24reader.activity;
 
 import android.app.LoaderManager;
+import android.content.Intent;
 import android.content.Loader;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -11,7 +14,9 @@ import com.cjj.MaterialRefreshLayout;
 import com.cjj.MaterialRefreshListener;
 import com.cybulski.nazarko.tv24reader.R;
 import com.cybulski.nazarko.tv24reader.adapter.EntryAdapter;
+import com.cybulski.nazarko.tv24reader.loader.CancelLoaderListener;
 import com.cybulski.nazarko.tv24reader.loader.EntriesListLoader;
+import com.cybulski.nazarko.tv24reader.model.dbmodel.Entry;
 import com.cybulski.nazarko.tv24reader.model.networkmodel.Feed;
 
 import java.util.List;
@@ -21,7 +26,7 @@ import butterknife.Bind;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-public class EntryListActivity extends AbstractBaseActivity implements LoaderManager.LoaderCallbacks<List<Objects>>{
+public class EntryListActivity extends AbstractBaseActivity implements LoaderManager.LoaderCallbacks<List<Objects>>,AdapterView.OnItemClickListener{
 
   private static final String LOG_TAG = "EntryListActivity";
 
@@ -57,7 +62,7 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
 
       @Override
       public void onfinish() {
-        Toast.makeText(EntryListActivity.this, "finish", Toast.LENGTH_LONG).show();
+        //Toast.makeText(EntryListActivity.this, "finish", Toast.LENGTH_LONG).show();
       }
 
     });
@@ -71,6 +76,7 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
         .findAll();
     adapter = new EntryAdapter(this, enties, true);
     listView.setAdapter(adapter);
+    listView.setOnItemClickListener(this);
     realm.close();
   }
 
@@ -95,7 +101,20 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
   public Loader onCreateLoader(int id, Bundle args) {
     Log.d(LOG_TAG, "onCreateLoader() " + id);
     if (id == ENTRY_LIST_LOADER_ID) {
-      return new EntriesListLoader(getApp(),new Feed(Realm.getDefaultInstance().where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class).findFirst()));
+      return new EntriesListLoader(getApp(),
+          new Feed(Realm.getDefaultInstance().where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class).findFirst()),
+          new CancelLoaderListener() {
+            @Override
+            public void onCancelLoadNetwork(String url) {
+              runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                  Toast.makeText(EntryListActivity.this, "error", Toast.LENGTH_LONG).show();
+                  materialRefreshLayout.finishRefresh();
+                }
+              });
+            }
+          });
     }
 //    if (id == ENTRY_DB_LIST_LOADER_ID) {
 //      return new EntriesListfromDBLoader(getApp(),Realm.getDefaultInstance().where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class).findFirst());
@@ -119,4 +138,16 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
   }
 
 
+  @Override
+  public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    Intent  webIntent= new Intent(this,WebViewActivity.class);
+    Entry entry = adapter.getItem(position).getEntries().get(position);
+
+    startWebViewActivity(webIntent,entry);
+  }
+
+  public  void startWebViewActivity(Intent intent,Entry entry){
+    intent.putExtra(WebViewActivity.EXTRA_URL,entry.getLink());
+    startActivity(intent);
+  }
 }

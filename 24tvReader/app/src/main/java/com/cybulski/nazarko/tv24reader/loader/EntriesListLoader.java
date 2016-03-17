@@ -27,32 +27,37 @@ public class EntriesListLoader  extends AsyncTaskLoader<List<Entry>> {
 
   private static final String LOG_TAG = "EntriesListLoader";
 
-  private final  App            app;
-  private        Feed           feed;
-  private        OkHttpClient   client ;
+  private final  App                    app;
+  private        Feed                   feed;
+  private        OkHttpClient           client ;
+  private        CancelLoaderListener   listener;
 
-  public EntriesListLoader(App app,Feed feed) {
+  public EntriesListLoader(App app,Feed feed,CancelLoaderListener listener) {
     super(app);
     this.app = app;
     this.feed = feed;
-    client = new OkHttpClient();
+    this.client = new OkHttpClient();
+    this.listener = listener;
   }
 
   @Override
   public List<Entry> loadInBackground() {
     final ArrayList<Entry> list = new ArrayList<>();
+    Realm realm = Realm.getInstance(getContext());
+    com.cybulski.nazarko.tv24reader.model.dbmodel.Feed  feed = realm.where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
+        .equalTo("url", this.feed.getUrl())
+        .findFirst();
     try {
        list.addAll(new XML24TVParser().parse(loadNewsXml(feed.getUrl())));
 
     } catch (IOException e) {
-      this.cancelLoad();
+      if (listener!=null){
+        listener.onCancelLoadNetwork(feed.getUrl());
+      }
       e.printStackTrace();
     }
 
-    Realm realm = Realm.getInstance(getContext());
-    com.cybulski.nazarko.tv24reader.model.dbmodel.Feed  feed = realm.where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
-                                                                    .equalTo("url", this.feed.getUrl())
-                                                                    .findFirst();
+
     Log.d(LOG_TAG, feed.getUrl() + " entries" + feed.getEntries().size());
     realm.beginTransaction();
     if (feed.getEntries()==null){
@@ -65,6 +70,7 @@ public class EntriesListLoader  extends AsyncTaskLoader<List<Entry>> {
         entrydb.setTitle(entry.getTitle());
         entrydb.setDate(entry.getDate());
         entrydb.setUrl(entry.getUrl());
+        entrydb.setLink(entry.getLink());
         feed.getEntries().add(entrydb);
       }catch (RealmPrimaryKeyConstraintException exception){
 
@@ -82,8 +88,10 @@ public class EntriesListLoader  extends AsyncTaskLoader<List<Entry>> {
      Request request = new Request.Builder()
          .url(url)
          .build();
-     Response response = client.newCall(request).execute();
-     return response.body().string();
+       Response response = client.newCall(request).execute();
+       return response.body().string();
+
+
    }
 
 

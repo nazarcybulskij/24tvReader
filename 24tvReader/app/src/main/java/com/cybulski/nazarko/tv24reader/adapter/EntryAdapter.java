@@ -13,6 +13,12 @@ import com.cybulski.nazarko.tv24reader.activity.EntryListActivity;
 import com.cybulski.nazarko.tv24reader.model.dbmodel.Entry;
 import com.cybulski.nazarko.tv24reader.model.dbmodel.Feed;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import io.realm.RealmBaseAdapter;
@@ -23,6 +29,15 @@ import io.realm.RealmResults;
  */
 public class EntryAdapter extends RealmBaseAdapter<Feed> {
   private LayoutInflater inflater;
+  private static final DateFormat[] PUBDATE_DATE_FORMATS_OLD = {
+      new SimpleDateFormat("ddd, dd MMM yyyy HH:mm:ss z", Locale.US),
+
+  };
+  private static final DateFormat[] PUBDATE_DATE_FORMATS_NEW = {
+      new SimpleDateFormat("dd MMM , HH:mm", Locale.UK),
+
+  };
+
 
   public EntryAdapter(Context context, RealmResults<Feed> realmResults, boolean automaticUpdate) {
     super(context, realmResults, automaticUpdate);
@@ -58,11 +73,22 @@ public class EntryAdapter extends RealmBaseAdapter<Feed> {
     Feed feed = getItem(0);
     Entry  item = feed.getEntries().get(position);
     holder.titleTextView.setText(item.getTitle());
-    holder.dateTextView.setText(item.getDate());
+    holder.dateTextView.setText(PUBDATE_DATE_FORMATS_NEW[0].format(parsePubdateDate(item.getDate())));
     Glide.with(context).load(item.getUrl()).into(holder.mainImgView);
-
-
     return  convertView;
+  }
+
+
+  private Date parsePubdateDate(String dateStr) {
+    Date result = null;
+    try {
+      result = PUBDATE_DATE_FORMATS_OLD[0].parse(dateStr);
+      return  result;
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
+    return new Date();
+
   }
 
   public static class ViewHolder {
