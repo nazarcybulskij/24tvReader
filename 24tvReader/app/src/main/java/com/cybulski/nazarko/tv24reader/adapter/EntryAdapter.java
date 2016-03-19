@@ -27,7 +27,7 @@ import io.realm.RealmResults;
 /**
  * Created by nazarko on 3/16/16.
  */
-public class EntryAdapter extends RealmBaseAdapter<Feed> {
+public class EntryAdapter extends RealmBaseAdapter<Entry> {
   private LayoutInflater inflater;
   private static final DateFormat[] PUBDATE_DATE_FORMATS_OLD = {
       new SimpleDateFormat("ddd, dd MMM yyyy HH:mm:ss z", Locale.US),
@@ -39,24 +39,25 @@ public class EntryAdapter extends RealmBaseAdapter<Feed> {
   };
 
 
-  public EntryAdapter(Context context, RealmResults<Feed> realmResults, boolean automaticUpdate) {
+  public EntryAdapter(Context context, RealmResults<Entry> realmResults, boolean automaticUpdate) {
     super(context, realmResults, automaticUpdate);
     inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
   }
 
   @Override
   public int getCount() {
-    return getItem(0).getEntries().size();
+    return realmResults.size();
   }
 
   @Override
-  public Feed getItem(int i) {
-    return super.getItem(0);
+  public Entry getItem(int i) {
+    return realmResults.get(i);
   }
 
   @Override
   public long getItemId(int i) {
-    return super.getItemId(i);
+    return i;
   }
 
 
@@ -70,10 +71,10 @@ public class EntryAdapter extends RealmBaseAdapter<Feed> {
     } else {
       holder = (ViewHolder) convertView.getTag();
     }
-    Feed feed = getItem(0);
-    Entry  item = feed.getEntries().get(position);
+
+    Entry  item = getItem(position);
     holder.titleTextView.setText(item.getTitle());
-    holder.dateTextView.setText(PUBDATE_DATE_FORMATS_NEW[0].format(parsePubdateDate(item.getDate())));
+    holder.dateTextView.setText(item.getDate());
     Glide.with(context).load(item.getUrl()).into(holder.mainImgView);
     return  convertView;
   }

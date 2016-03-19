@@ -43,40 +43,35 @@ public class EntriesListLoader  extends AsyncTaskLoader<List<Entry>> {
   @Override
   public List<Entry> loadInBackground() {
     final ArrayList<Entry> list = new ArrayList<>();
-    Realm realm = Realm.getInstance(getContext());
+    Realm realm = Realm.getDefaultInstance();
+
     com.cybulski.nazarko.tv24reader.model.dbmodel.Feed  feed = realm.where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
         .equalTo("url", this.feed.getUrl())
         .findFirst();
+
     try {
        list.addAll(new XML24TVParser().parse(loadNewsXml(feed.getUrl())));
-
     } catch (IOException e) {
       if (listener!=null){
         listener.onCancelLoadNetwork(feed.getUrl());
       }
       e.printStackTrace();
     }
-
-
-    Log.d(LOG_TAG, feed.getUrl() + " entries" + feed.getEntries().size());
     realm.beginTransaction();
-    if (feed.getEntries()==null){
-      feed.setEntries(new RealmList<com.cybulski.nazarko.tv24reader.model.dbmodel.Entry>());
-    }
-
     for (Entry entry:list){
       try {
-        com.cybulski.nazarko.tv24reader.model.dbmodel.Entry entrydb = realm.createObject(com.cybulski.nazarko.tv24reader.model.dbmodel.Entry.class);
+        com.cybulski.nazarko.tv24reader.model.dbmodel.Entry entrydb =  new com.cybulski.nazarko.tv24reader.model.dbmodel.Entry();
         entrydb.setTitle(entry.getTitle());
         entrydb.setDate(entry.getDate());
         entrydb.setUrl(entry.getUrl());
         entrydb.setLink(entry.getLink());
-        feed.getEntries().add(entrydb);
+        entrydb.setId(entry.getId());
+        entrydb.setFeed(feed);
+        feed.getEntries().add(realm.copyToRealm(entrydb));
       }catch (RealmPrimaryKeyConstraintException exception){
 
       }
     }
-    realm.copyToRealmOrUpdate(feed);
     realm.commitTransaction();
     realm.close();
     Log.d(LOG_TAG, "loadInBackground() loaded " + list.size() + " entries");

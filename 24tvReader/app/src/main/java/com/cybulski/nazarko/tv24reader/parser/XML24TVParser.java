@@ -54,6 +54,12 @@ public class XML24TVParser {
       Document doc = Jsoup.parse(element1.text(), "", Parser.htmlParser());
       entry.setUrl(doc.select(TAG_IMG).attr(ATTR_SRC));
     }
+    if (!"".equals(entry.getLink())){
+      String [] strings = entry.getUrl().split("/");
+      String id = strings[strings.length-1];
+      entry.setId(id);
+    }
+
     return  entry;
   }
 }

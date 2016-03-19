@@ -25,6 +25,7 @@ import java.util.Objects;
 import butterknife.Bind;
 import io.realm.Realm;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 public class EntryListActivity extends AbstractBaseActivity implements LoaderManager.LoaderCallbacks<List<Objects>>,AdapterView.OnItemClickListener{
 
@@ -56,7 +57,7 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
     materialRefreshLayout.setMaterialRefreshListener(new MaterialRefreshListener() {
       @Override
       public void onRefresh(final MaterialRefreshLayout materialRefreshLayout) {
-        getLoaderManager().initLoader(ENTRY_LIST_LOADER_ID, null, EntryListActivity.this).forceLoad();
+        getLoaderManager().restartLoader(ENTRY_LIST_LOADER_ID, null, EntryListActivity.this).forceLoad();
         materialRefreshLayout.finishRefreshLoadMore();
       }
 
@@ -70,10 +71,24 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
     Realm realm = Realm .getDefaultInstance();
     com.cybulski.nazarko.tv24reader.model.dbmodel.Feed feed=realm.where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
         .findFirst();
-    RealmResults<com.cybulski.nazarko.tv24reader.model.dbmodel.Feed> enties = realm
-        .where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
-        .equalTo("url", feed.getUrl())
+//    RealmResults<com.cybulski.nazarko.tv24reader.model.dbmodel.Feed> enties = realm
+//        .where(com.cybulski.nazarko.tv24reader.model.dbmodel.Feed.class)
+//        .equalTo("url", feed.getUrl())
+//        .findAll();
+
+
+    RealmResults<com.cybulski.nazarko.tv24reader.model.dbmodel.Entry> enties = realm.where(com.cybulski.nazarko.tv24reader.model.dbmodel.Entry.class)
+        .equalTo("feed.url", feed.getUrl())
         .findAll();
+
+    enties.sort("date",Sort.DESCENDING);
+
+
+
+
+
+
+
     adapter = new EntryAdapter(this, enties, true);
     listView.setAdapter(adapter);
     listView.setOnItemClickListener(this);
@@ -141,7 +156,7 @@ public class EntryListActivity extends AbstractBaseActivity implements LoaderMan
   @Override
   public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
     Intent  webIntent= new Intent(this,WebViewActivity.class);
-    Entry entry = adapter.getItem(position).getEntries().get(position);
+    Entry entry = adapter.getItem(position);
 
     startWebViewActivity(webIntent,entry);
   }

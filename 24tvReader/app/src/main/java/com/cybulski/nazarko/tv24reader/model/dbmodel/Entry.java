@@ -7,11 +7,23 @@ import io.realm.annotations.PrimaryKey;
  * Created by nazarko on 3/16/16.
  */
 public class Entry extends RealmObject {
-  private String  link;
+
+
   @PrimaryKey
+  private String  id;
+  private String  link;
   private String  title;
   private String  date;
   private String  url;
+  private Feed    feed;
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
 
 
   public String getDate() {
@@ -44,5 +56,13 @@ public class Entry extends RealmObject {
 
   public void setLink(String link) {
     this.link = link;
+  }
+
+  public Feed getFeed() {
+    return feed;
+  }
+
+  public void setFeed(Feed feed) {
+    this.feed = feed;
   }
 }

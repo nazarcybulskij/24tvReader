@@ -5,6 +5,9 @@ package com.cybulski.nazarko.tv24reader.model.networkmodel;
  */
 public class Entry {
 
+
+
+  String  id;
   String  title;
   String  date;
   String  url;
@@ -42,4 +45,13 @@ public class Entry {
   public void setLink(String link) {
     this.link = link;
   }
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
 }
